@@ -264,7 +264,7 @@ dependencies = [
 
 [[package]]
 name = "cargo-watchdoc"
-version = "0.3.1"
+version = "0.3.2"
 dependencies = [
  "axum",
  "cargo-config2",

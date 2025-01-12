@@ -9,7 +9,7 @@ permissions:
 
 jobs:
   tests:
-    uses: .github/workflows/test.yaml
+    uses: ./.github/workflows/test.yaml
 
   release:
     runs-on: macos-latest
