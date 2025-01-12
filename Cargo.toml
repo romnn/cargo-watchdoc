@@ -1,0 +1,45 @@
+[package]
+name = "cargo-watchdoc"
+version = "0.3.0"
+edition = "2021"
+categories = ["command-line-utilities", "development-tools"]
+description = "A CLI to generate and serve your `cargo doc` documentation with hot-reloading during development"
+keywords = ["cargo", "watch", "compile", "notify", "docs"]
+license = "MIT OR Apache-2.0"
+readme = "README.md"
+repository = "https://github.com/romnn/cargo-watchdoc"
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+
+[features]
+default = []
+
+[package.metadata.cargo-feature-combinations]
+denylist = ["default"]
+
+[dependencies]
+color-eyre = "0"
+axum = "0"
+cargo-config2 = "0"
+cargo_metadata = "0"
+clap = { version = "4", features = ["derive"] }
+ignore-files = "3"
+log = "0"
+opener = "0"
+portpicker = "0"
+stderrlog = "0"
+tokio = "1"
+tower-http = { version = "0", features = ["fs"] }
+http-body = "1"
+tower-livereload = "0"
+watchexec = "5"
+watchexec-events = "4"
+watchexec-filterer-globset = "6"
+watchexec-filterer-ignore = "5"
+
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]

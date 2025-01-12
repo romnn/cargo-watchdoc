@@ -1,0 +1,32 @@
+name: release
+on:
+  push:
+    tags:
+      - "*"
+
+permissions:
+  contents: write
+
+jobs:
+  tests:
+    uses: .github/workflows/test.yaml
+
+  release:
+    runs-on: macos-latest
+    needs: [tests]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: arduino/setup-task@v2
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: Homebrew/actions/setup-homebrew@master
+      - uses: dtolnay/rust-toolchain@stable
+      - run: brew install zig
+      - run: brew install goreleaser
+      - name: Release
+        run: task release --output group
+        env:
+          GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+          TAP_GITHUB_TOKEN: "${{ secrets.TAP_GITHUB_TOKEN }}"

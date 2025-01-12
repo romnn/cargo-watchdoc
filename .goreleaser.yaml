@@ -1,0 +1,68 @@
+# yaml-language-server: $schema=https://goreleaser.com/static/schema.json
+version: 2
+
+before:
+  hooks:
+    - rustup default stable
+    - cargo install --locked cargo-zigbuild
+
+brews:
+  - name: cargo-watchdoc
+    ids:
+      - cargo-watchdoc
+    description: "A CLI to generate and serve your `cargo doc` documentation with hot-reloading during development."
+    commit_author:
+      name: romnn
+      email: contact@romnn.com
+    repository:
+      owner: romnn
+      name: homebrew-tap
+      branch: main
+      token: "{{ .Env.TAP_GITHUB_TOKEN }}"
+      pull_request:
+        enabled: false
+
+builds:
+  - id: cargo-watchdoc
+    builder: rust
+    binary: cargo-watchdoc
+    targets:
+      - x86_64-unknown-linux-gnu
+      - x86_64-apple-darwin
+      - x86_64-pc-windows-gnu
+      - aarch64-unknown-linux-gnu
+      - aarch64-apple-darwin
+    dir: ./
+    tool: cargo
+    command: zigbuild
+    flags:
+      - "--release"
+      - "--package=cargo-watchdoc"
+      - "--bin=cargo-watchdoc"
+      - "--target-dir=./target" # TODO: can we remove this once rust support is better?
+
+archives:
+  - id: cargo-watchdoc
+    format: tar.gz
+    name_template: "{{ .Binary }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    builds:
+      - cargo-watchdoc
+    files:
+      - LICENSE
+    format_overrides:
+      - goos: windows
+        format: zip
+
+checksum:
+  name_template: "checksums.txt"
+
+changelog:
+  use: github
+  filters:
+    exclude:
+      - "^ci:"
+      - "^docs:"
+      - "^test:"
+
+release:
+  draft: false
