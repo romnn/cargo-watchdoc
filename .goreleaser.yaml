@@ -48,7 +48,8 @@ archives:
     builds:
       - cargo-watchdoc
     files:
-      - LICENSE
+      - LICENSE-MIT
+      - LICENSE-APACHE
     format_overrides:
       - goos: windows
         format: zip
