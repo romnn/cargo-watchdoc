@@ -12,31 +12,41 @@ use std::pin::Pin;
 use std::sync::Arc;
 
 #[derive(Parser, Debug)]
-#[command(bin_name = "cargo")]
-enum Cli {
-    Watchdoc {
-        /// Opens docs in webbrowser.
-        ///
-        /// The given package is opened, or the root package otherwise.
-        #[arg(
+struct Options {
+    #[clap(subcommand)]
+    pub command: Command,
+}
+
+#[derive(clap::Subcommand, Debug)]
+enum Command {
+    /// Watchdoc
+    Watchdoc(WatchdocOptions),
+}
+
+#[derive(Parser, Debug)]
+#[command(bin_name = "cargo", version, about, author)]
+struct WatchdocOptions {
+    /// Opens docs in webbrowser.
+    ///
+    /// The given package is opened, or the root package otherwise.
+    #[arg(
             short, long, num_args = 0..=1,
             default_missing_value = "crate",
             value_name = "PACKAGE",
         )]
-        open: Option<String>,
+    open: Option<String>,
 
-        /// Clears terminal between runs
-        #[arg(short, long)]
-        clear: bool,
+    /// Clears terminal between runs
+    #[arg(short, long)]
+    clear: bool,
 
-        /// Forces theme
-        #[arg(short, long)]
-        theme: Option<Theme>,
+    /// Forces theme
+    #[arg(short, long)]
+    theme: Option<Theme>,
 
-        /// Arguments after `--` are passed to `cargo doc`
-        #[arg(allow_hyphen_values = true, last = true)]
-        cargo_doc_args: Vec<String>,
-    },
+    /// Arguments after `--` are passed to `cargo doc`
+    #[arg(allow_hyphen_values = true, last = true)]
+    cargo_doc_args: Vec<String>,
 }
 
 #[derive(ValueEnum, Clone, Debug, Copy)]
@@ -149,12 +159,9 @@ fn build_app(metadata: &Metadata, _theme: Option<Theme>) -> (Router, tower_liver
 
 async fn run() -> eyre::Result<()> {
     stderrlog::new().init()?;
-    let Cli::Watchdoc {
-        open,
-        cargo_doc_args,
-        theme,
-        ..
-    } = Cli::parse();
+    let Options {
+        command: Command::Watchdoc(options),
+    } = Options::parse();
 
     let config = cargo_config2::Config::load()?;
     let metadata = MetadataCommand::new().exec()?;
@@ -167,14 +174,14 @@ async fn run() -> eyre::Result<()> {
     };
     let addr = SocketAddrV4::new(Ipv4Addr::LOCALHOST, port);
     let listener = tokio::net::TcpListener::bind(addr).await?;
-    let (app, reloader) = build_app(&metadata, theme);
+    let (app, reloader) = build_app(&metadata, options.theme);
     let app = axum::serve(listener, app.into_make_service());
 
-    let root = root_package(open.as_deref(), &metadata)?;
+    let root = root_package(options.open.as_deref(), &metadata)?;
     let addr = format!("http://{addr}/{root}");
     eprintln!("Serving docs at: {addr}");
 
-    if open.is_some() {
+    if options.open.is_some() {
         open_in_browser(&addr, config.doc.browser.as_ref())?;
     }
 
@@ -183,7 +190,7 @@ async fn run() -> eyre::Result<()> {
             prog: "cargo".into(),
             args: ["doc".into()]
                 .into_iter()
-                .chain(cargo_doc_args.clone())
+                .chain(options.cargo_doc_args.clone())
                 .collect(),
         },
         options: watchexec::command::SpawnOptions::default(),
