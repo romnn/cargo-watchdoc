@@ -149,11 +149,11 @@ fn build_app(
         tower_http::services::ServeDir::new(metadata.target_directory.join("doc"))
             .not_found_service(routing::get(move || async move {
                 Html(unindent::unindent(&format!(
-                    r#"
+                    r"
                         <head>
                             <meta http-equiv='refresh' content='0; URL={root_addr}'>
                         </head>
-                    "#
+                    "
                 )))
             })),
     );
