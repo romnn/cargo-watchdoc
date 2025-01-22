@@ -30,10 +30,10 @@ struct WatchdocOptions {
     ///
     /// The given package is opened, or the root package otherwise.
     #[arg(
-            short, long, num_args = 0..=1,
-            default_missing_value = "crate",
-            value_name = "PACKAGE",
-        )]
+        short, long, num_args = 0..=1,
+        default_missing_value = "crate",
+        value_name = "PACKAGE",
+    )]
     open: Option<String>,
 
     /// Clears terminal between runs
@@ -115,7 +115,7 @@ async fn globset_filterer(
     Ok(filterer)
 }
 
-fn root_package(open: Option<&str>, metadata: &Metadata) -> eyre::Result<String> {
+fn root_package(open: Option<&str>, metadata: &Metadata) -> Option<String> {
     open.and_then(|o| (o != "crate").then_some(o))
         .or_else(|| {
             metadata
@@ -124,7 +124,6 @@ fn root_package(open: Option<&str>, metadata: &Metadata) -> eyre::Result<String>
                 .map(|package| package.name.as_str())
         })
         .map(|package| package.replace('-', "_"))
-        .ok_or_else(|| eyre::eyre!("Project must have either a root package or workspace members"))
 }
 
 fn open_in_browser(addr: &str, browser: Option<&cargo_config2::PathAndArgs>) -> eyre::Result<()> {
@@ -139,13 +138,23 @@ fn open_in_browser(addr: &str, browser: Option<&cargo_config2::PathAndArgs>) -> 
     Ok(())
 }
 
-fn build_app(metadata: &Metadata, _theme: Option<Theme>) -> (Router, tower_livereload::Reloader) {
+fn build_app(
+    metadata: &Metadata,
+    _theme: Option<Theme>,
+    root_addr: String,
+) -> (Router, tower_livereload::Reloader) {
     let livereload = tower_livereload::LiveReloadLayer::new();
     let reloader = livereload.reloader();
     let app = Router::new().fallback_service(
         tower_http::services::ServeDir::new(metadata.target_directory.join("doc"))
-            .not_found_service(routing::get(|| async {
-                Html(r#"404 <a href="/help.html?search=">Back to Search</a>"#)
+            .not_found_service(routing::get(move || async move {
+                Html(unindent::unindent(&format!(
+                    r#"
+                        <head>
+                            <meta http-equiv='refresh' content='0; URL={root_addr}'>
+                        </head>
+                    "#
+                )))
             })),
     );
     let app = app.layer(livereload);
@@ -155,6 +164,22 @@ fn build_app(metadata: &Metadata, _theme: Option<Theme>) -> (Router, tower_liver
     //     ));
     // }
     (app, reloader)
+}
+
+#[derive(Parser, Debug, Clone)]
+pub struct CargoDocOptions {
+    #[clap(short = 'p', long = "package", help = "cargo workspace package")]
+    pub package: Option<String>,
+}
+
+fn package_arg(args: &[String]) -> Option<String> {
+    let options = CargoDocOptions::try_parse_from(
+        [std::env!("CARGO_BIN_NAME")]
+            .into_iter()
+            .chain(args.iter().map(String::as_str)),
+    )
+    .ok()?;
+    options.package
 }
 
 async fn run() -> eyre::Result<()> {
@@ -174,12 +199,17 @@ async fn run() -> eyre::Result<()> {
     };
     let addr = SocketAddrV4::new(Ipv4Addr::LOCALHOST, port);
     let listener = tokio::net::TcpListener::bind(addr).await?;
-    let (app, reloader) = build_app(&metadata, options.theme);
-    let app = axum::serve(listener, app.into_make_service());
 
-    let root = root_package(options.open.as_deref(), &metadata)?;
-    let addr = format!("http://{addr}/{root}");
+    let root_package = package_arg(&options.cargo_doc_args)
+        .or_else(|| root_package(options.open.as_deref(), &metadata))
+        .ok_or_else(|| {
+            eyre::eyre!("project must have either a root package or workspace members")
+        })?;
+    let addr = format!("http://{addr}/{root_package}");
     eprintln!("Serving docs at: {addr}");
+
+    let (app, reloader) = build_app(&metadata, options.theme, addr.clone());
+    let app = axum::serve(listener, app.into_make_service());
 
     if options.open.is_some() {
         open_in_browser(&addr, config.doc.browser.as_ref())?;
@@ -200,6 +230,7 @@ async fn run() -> eyre::Result<()> {
     let wx = watchexec::Watchexec::new_async(move |mut action| {
         let reloader_clone = reloader.clone();
         let cargo_doc_command_clone = Arc::clone(&cargo_doc_command);
+        let addr = addr.clone();
         Box::new(async move {
             if action.signals().next().is_some() {
                 eprintln!("received signal: quitting");
@@ -226,7 +257,7 @@ async fn run() -> eyre::Result<()> {
                         ..
                     } = context.current
                     {
-                        eprintln!("reloading docs");
+                        eprintln!("reloading docs at {addr}");
                         reloader_clone.reload();
                     }
                 })

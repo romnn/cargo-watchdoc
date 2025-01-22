@@ -29,12 +29,15 @@ clap = { version = "4", features = ["derive"] }
 ignore-files = "3"
 log = "0"
 opener = "0"
+unindent = "0"
 portpicker = "0"
 stderrlog = "0"
 tokio = "^1.43"
 tower-http = { version = "^0.6", features = ["fs"] }
 http-body = "1"
 tower-livereload = "0"
+
+# watchexec
 watchexec = "5"
 watchexec-events = "4"
 watchexec-filterer-globset = "6"
