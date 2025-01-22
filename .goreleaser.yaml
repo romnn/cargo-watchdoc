@@ -15,7 +15,6 @@ brews:
     commit_author:
       name: romnn
       email: contact@romnn.com
-    goamd64: ""
     repository:
       owner: romnn
       name: homebrew-tap
@@ -55,16 +54,17 @@ archives:
     format_overrides:
       - goos: windows
         format: zip
-        # checksum:
-        #   name_template: "checksums.txt"
-        #
-        # changelog:
-        #   use: github
-        #   filters:
-        #     exclude:
-        #       - "^ci:"
-        #       - "^docs:"
-        #       - "^test:"
-        #
-        # release:
-        #   draft: false
+
+checksum:
+  name_template: "checksums.txt"
+
+changelog:
+  use: github
+  filters:
+    exclude:
+      - "^ci:"
+      - "^docs:"
+      - "^test:"
+
+release:
+  draft: false
