@@ -44,7 +44,7 @@ builds:
 
 archives:
   - id: cargo-watchdoc
-    format: tar.gz
+    formats: ["tar.gz"]
     name_template: "{{ .Binary }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
     builds:
       - cargo-watchdoc
@@ -53,7 +53,7 @@ archives:
       - LICENSE-APACHE
     format_overrides:
       - goos: windows
-        format: zip
+        formats: ["zip"]
 
 checksum:
   name_template: "checksums.txt"
