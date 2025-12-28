@@ -1,6 +1,6 @@
 [package]
 name = "cargo-watchdoc"
-version = "0.3.8"
+version = "0.3.9"
 edition = "2021"
 categories = ["command-line-utilities", "development-tools"]
 description = "A CLI to generate and serve your `cargo doc` documentation with hot-reloading during development"
