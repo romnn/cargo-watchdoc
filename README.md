@@ -9,9 +9,9 @@ A CLI to generate and serve your `cargo doc` documentation with hot-reloading du
 ### Installation
 
 ```bash
-brew install romnn/tap/cargo-watchdoc
+brew install --cask romnn/tap/cargo-watchdoc
 
-# or install from source
+# Or install from source
 cargo install --git https://github.com/romnn/cargo-watchdoc.git cargo-watchdoc
 ```
 

@@ -4,14 +4,14 @@ version: 2
 before:
   hooks:
     - rustup default stable
-    - cargo install --locked cargo-zigbuild
+    - cargo install --force --locked cargo-zigbuild
 
-brews:
-  - name: cargo-watchdoc
+homebrew_casks:
+  - name: &cargo-watchdoc cargo-watchdoc
     ids:
-      - cargo-watchdoc
+      - *cargo-watchdoc
     description: "A CLI to generate and serve your `cargo doc` documentation with hot-reloading during development."
-    directory: Formula
+    directory: Casks
     commit_author:
       name: romnn
       email: contact@romnn.com
@@ -22,17 +22,27 @@ brews:
       token: "{{ .Env.TAP_GITHUB_TOKEN }}"
       pull_request:
         enabled: false
+    hooks:
+      post:
+        install: |
+          if OS.mac? && File.exist?("/usr/bin/xattr")
+            system_command "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "#{staged_path}/cargo-watchdoc"]
+          end
 
 builds:
-  - id: cargo-watchdoc
+  - id: *cargo-watchdoc
     builder: rust
-    binary: cargo-watchdoc
+    binary: *cargo-watchdoc
     targets:
+      # linux
       - x86_64-unknown-linux-gnu
-      - x86_64-apple-darwin
-      - x86_64-pc-windows-gnu
       - aarch64-unknown-linux-gnu
+      # apple
+      - x86_64-apple-darwin
       - aarch64-apple-darwin
+      # windows
+      - x86_64-pc-windows-gnu
+      - aarch64-pc-windows-gnullvm
     dir: ./
     tool: cargo
     command: zigbuild
@@ -43,11 +53,11 @@ builds:
       - "--target-dir=./target" # TODO: can we remove this once rust support is better?
 
 archives:
-  - id: cargo-watchdoc
+  - id: *cargo-watchdoc
     formats: ["tar.gz"]
     name_template: "{{ .Binary }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
     builds:
-      - cargo-watchdoc
+      - *cargo-watchdoc
     files:
       - LICENSE-MIT
       - LICENSE-APACHE

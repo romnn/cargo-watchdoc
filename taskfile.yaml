@@ -1,40 +1,54 @@
 version: "3"
-includes:
-  dev:tools:install:
-    taskfile: deps.taskfile.yaml
-    dir: ./
-
 tasks:
   default:
     cmds:
       - task: run
 
   run:
-    desc: "run cargo-watchdoc"
+    desc: "run"
     ignore_error: true
     interactive: true
     cmds:
       - cargo run -- watchdoc {{.CLI_ARGS}}
 
   build:
-    desc: "build cargo-watchdoc"
+    desc: "build in debug mode"
     cmds:
       - cargo build --all-targets {{.CLI_ARGS}}
 
+  build:fc:
+    desc: "build in debug mode for all combinations of features"
+    cmds:
+      - cargo fc build --all-targets {{.CLI_ARGS}}
+
   build:release:
-    desc: "build cargo-watchdoc in release mode"
+    desc: "build in release mode"
     cmds:
       - cargo build --all-targets --release {{.CLI_ARGS}}
 
   build:goreleaser:
-    desc: "build cargo-watchdoc mode using goreleaser"
+    desc: "build in release mode using goreleaser"
     cmds:
-      - goreleaser build --snapshot --clean
+      # pretter-ignore
+      - >-
+        docker run --rm
+        -v "${PWD}:/workspace"
+        -w /workspace
+        ghcr.io/rust-cross/cargo-zigbuild
+        bash -c './release.sh && goreleaser build --snapshot --clean'
 
   release:
-    desc: "release cargo-watchdoc using goreleaser"
+    desc: "release using goreleaser"
     cmds:
-      - goreleaser release --clean
+      # pretter-ignore
+      - >-
+        docker run --rm
+        -e "GITHUB_TOKEN=${GITHUB_TOKEN}"
+        -e "TAP_GITHUB_TOKEN=${TAP_GITHUB_TOKEN}"
+        -v "${PWD}:/workspace"
+        -w /workspace
+        ghcr.io/rust-cross/cargo-zigbuild
+        bash -c './release.sh && goreleaser release --clean'
 
   typos:
     desc: "check repository for typos"
@@ -119,7 +133,7 @@ tasks:
 
   lint:fix:
     desc: "lint and fix cargo workspace"
-    alias: [fix]
+    aliases: [fix]
     cmds:
       # prettier-ignore
       - >-
@@ -128,3 +142,8 @@ tasks:
         --tests --benches --examples --all-features
         {{.CLI_ARGS}}
         -- -Dclippy::all -Dclippy::pedantic
+
+  lint:actions:
+    desc: "lint github actions"
+    cmds:
+      - actionlint
