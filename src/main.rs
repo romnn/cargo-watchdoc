@@ -85,7 +85,7 @@ async fn globset_filterer(
         format!("*{main_separator}target{main_separator}**"),
         "rustc-ice-*.txt".into(),
     ];
-    log::debug!("default ignores: {:?}", ignores);
+    log::debug!("default ignores: {ignores:?}");
 
     let ignores = ignores.into_iter().map(|p| {
         (

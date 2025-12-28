@@ -56,7 +56,7 @@ archives:
   - id: *cargo-watchdoc
     formats: ["tar.gz"]
     name_template: "{{ .Binary }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
-    builds:
+    ids:
       - *cargo-watchdoc
     files:
       - LICENSE-MIT
