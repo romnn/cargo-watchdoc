@@ -11,6 +11,8 @@ homebrew_casks:
     ids:
       - *cargo-watchdoc
     description: "A CLI to generate and serve your `cargo doc` documentation with hot-reloading during development."
+    custom_block: |
+      os macos: "darwin", linux: "linux"
     directory: Casks
     commit_author:
       name: romnn
