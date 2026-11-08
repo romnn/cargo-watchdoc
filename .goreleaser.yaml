@@ -26,9 +26,9 @@ homebrew_casks:
         enabled: false
     hooks:
       post:
-        install: |
-          if OS.mac? && File.exist?("/usr/bin/xattr")
-            system_command "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "#{staged_path}/cargo-watchdoc"]
+        install_steps: |
+          on_macos do
+            run "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "{{ .StagedPath }}/cargo-watchdoc"]
           end
 
 builds:
