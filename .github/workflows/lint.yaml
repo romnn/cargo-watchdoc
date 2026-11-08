@@ -1,8 +1,9 @@
 name: lint
 on:
-  push: {}
+  push:
+    branches: [main]
   pull_request:
-    types: [opened, synchronize, reopened, edited]
+    types: [opened, synchronize, reopened]
   schedule:
     # 8AM first day of the month in JAN and JUNE to keep workflow badges up-to-date
     - cron: "0 8 1 1,6 *"
