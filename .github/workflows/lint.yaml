@@ -1,8 +1,9 @@
 name: lint
 on:
-  push: {}
+  push:
+    branches: [main]
   pull_request:
-    types: [opened, synchronize, reopened, edited]
+    types: [opened, synchronize, reopened]
   schedule:
     # 8AM first day of the month in JAN and JUNE to keep workflow badges up-to-date
     - cron: "0 8 1 1,6 *"
@@ -19,13 +20,15 @@ jobs:
       - uses: arduino/setup-task@v2
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
-      - uses: Homebrew/actions/setup-homebrew@master
+      - uses: Homebrew/actions/setup-homebrew@main
       - uses: dtolnay/rust-toolchain@nightly
         with:
           components: clippy
       - run: |
           brew install cargo-audit
           brew install cargo-udeps
+      - name: Install cargo-feature-combinations
+        run: cargo install --locked --version 0.8.0 cargo-feature-combinations
       - name: Audit
         run: task audit --output group --output-group-error-only
       - name: Check for unused dependencies
@@ -40,7 +43,7 @@ jobs:
       - uses: arduino/setup-task@v2
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
-      - uses: Homebrew/actions/setup-homebrew@master
+      - uses: Homebrew/actions/setup-homebrew@main
       - run: brew install goreleaser
       - name: Check goreleaser config
         run: goreleaser check
@@ -52,7 +55,7 @@ jobs:
       - uses: arduino/setup-task@v2
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
-      - uses: Homebrew/actions/setup-homebrew@master
+      - uses: Homebrew/actions/setup-homebrew@main
       - uses: dtolnay/rust-toolchain@stable
       - run: |
           brew install typos-cli
