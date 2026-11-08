@@ -27,6 +27,8 @@ jobs:
       - run: |
           brew install cargo-audit
           brew install cargo-udeps
+      - name: Install cargo-feature-combinations
+        run: cargo install --locked --version 0.8.0 cargo-feature-combinations
       - name: Audit
         run: task audit --output group --output-group-error-only
       - name: Check for unused dependencies
